@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -49,26 +48,30 @@ fun CanvasScreen(modifier: Modifier = Modifier) {
 
     var isPickerOpen by remember { mutableStateOf(false) }
     var trashBounds by remember { mutableStateOf<Rect?>(null) }
-    var draggingCenter by remember { mutableStateOf<Offset?>(null) }
+    var isDragging by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize()) {
-        canvasState.stickers.forEach { sticker ->
-            key(sticker.id) {
-                StickerView(
-                    item = sticker,
-                    modifier = Modifier.zIndex(sticker.zIndex.toFloat()),
-                    onGestureStart = { id -> viewModel.onStickerBroughtToFront(id) },
-                    onDrag = { _, centerInWindow -> draggingCenter = centerInWindow },
-                    onGestureEnd = { id, x, y, scale, rotationDegrees, finalCenterInWindow ->
-                        val bounds = trashBounds
-                        if (bounds != null && bounds.contains(finalCenterInWindow)) {
-                            viewModel.onStickerRemoved(id)
-                        } else {
-                            viewModel.onStickerTransformed(id, x, y, scale, rotationDegrees)
+        Box(modifier = Modifier.fillMaxSize()) {
+            canvasState.stickers.forEach { sticker ->
+                key(sticker.id) {
+                    StickerView(
+                        item = sticker,
+                        modifier = Modifier.zIndex(sticker.zIndex.toFloat()),
+                        onGestureStart = { id ->
+                            viewModel.onStickerBroughtToFront(id)
+                            isDragging = true
+                        },
+                        onGestureEnd = { id, x, y, scale, rotationDegrees, finalCenterInWindow ->
+                            val bounds = trashBounds
+                            if (bounds != null && bounds.contains(finalCenterInWindow)) {
+                                viewModel.onStickerRemoved(id)
+                            } else {
+                                viewModel.onStickerTransformed(id, x, y, scale, rotationDegrees)
+                            }
+                            isDragging = false
                         }
-                        draggingCenter = null
-                    }
-                )
+                    )
+                }
             }
         }
 
@@ -77,28 +80,24 @@ fun CanvasScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
-                .zIndex(1000f)
         ) {
             Icon(Icons.Filled.Add, contentDescription = "Sticker ekle")
         }
 
-        FloatingActionButton(
-            onClick = {},
-            containerColor = if (draggingCenter != null) {
-                MaterialTheme.colorScheme.errorContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant
-            },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(24.dp)
-                .size(56.dp)
-                .zIndex(1000f)
-                .onGloballyPositioned { coordinates ->
-                    trashBounds = coordinates.boundsInWindow()
-                }
-        ) {
-            Icon(Icons.Filled.Delete, contentDescription = "Sil")
+        if (isDragging) {
+            FloatingActionButton(
+                onClick = {},
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(24.dp)
+                    .size(56.dp)
+                    .onGloballyPositioned { coordinates ->
+                        trashBounds = coordinates.boundsInWindow()
+                    }
+            ) {
+                Icon(Icons.Filled.Delete, contentDescription = "Sil")
+            }
         }
 
         if (isPickerOpen) {

@@ -16,6 +16,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 val STICKER_BASE_SIZE: Dp = 96.dp
 
@@ -23,7 +26,6 @@ val STICKER_BASE_SIZE: Dp = 96.dp
 fun StickerView(
     item: StickerItem,
     onGestureStart: (id: String) -> Unit,
-    onDrag: (id: String, centerInWindow: Offset) -> Unit,
     onGestureEnd: (id: String, x: Float, y: Float, scale: Float, rotationDegrees: Float, finalCenterInWindow: Offset) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -55,11 +57,12 @@ fun StickerView(
                 detectStickerGestures(
                     onGestureStart = { onGestureStart(item.id) },
                     onGesture = { _, pan, zoom, rotationChange ->
-                        x += pan.x
-                        y += pan.y
+                        val rad = rotation * (PI.toFloat() / 180f)
+                        val scaledPan = pan * scale
+                        x += scaledPan.x * cos(rad) - scaledPan.y * sin(rad)
+                        y += scaledPan.x * sin(rad) + scaledPan.y * cos(rad)
                         scale = (scale * zoom).coerceIn(0.3f, 4f)
                         rotation += rotationChange
-                        onDrag(item.id, layoutCenter + Offset(x, y))
                     },
                     onGestureEnd = {
                         onGestureEnd(item.id, x, y, scale, rotation, layoutCenter + Offset(x, y))
