@@ -1,5 +1,6 @@
 package com.atakan.travelplanner.ui.canvas
 
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -10,5 +11,13 @@ object CanvasStateSerializer {
     fun serialize(state: CanvasState): String = json.encodeToString(state)
 
     fun deserialize(raw: String): CanvasState =
-        if (raw.isBlank()) CanvasState() else json.decodeFromString(raw)
+        if (raw.isBlank()) {
+            CanvasState()
+        } else {
+            try {
+                json.decodeFromString(raw)
+            } catch (e: SerializationException) {
+                CanvasState()
+            }
+        }
 }

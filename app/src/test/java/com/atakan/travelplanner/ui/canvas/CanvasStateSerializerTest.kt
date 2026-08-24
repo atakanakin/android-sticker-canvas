@@ -24,4 +24,11 @@ class CanvasStateSerializerTest {
 
         assertEquals(CanvasState(), restored)
     }
+
+    @Test
+    fun `deserializing malformed json returns an empty CanvasState`() {
+        val restored = CanvasStateSerializer.deserialize("{ this is not valid json")
+
+        assertEquals(CanvasState(), restored)
+    }
 }
