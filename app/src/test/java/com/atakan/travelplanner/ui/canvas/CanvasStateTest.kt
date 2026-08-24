@@ -64,4 +64,46 @@ class CanvasStateTest {
         assertEquals(1.5f, sticker.scale)
         assertEquals(30f, sticker.rotationDegrees)
     }
+
+    @Test
+    fun `withStickerBroughtToFront on an unknown id returns the state unchanged`() {
+        val state = CanvasState().withStickerAdded(id = "a", assetName = "star.svg", x = 0f, y = 0f)
+
+        val result = state.withStickerBroughtToFront("does-not-exist")
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun `withStickerTransformed on an unknown id returns the state unchanged`() {
+        val state = CanvasState().withStickerAdded(id = "a", assetName = "star.svg", x = 0f, y = 0f)
+
+        val result = state.withStickerTransformed(id = "does-not-exist", x = 1f, y = 1f, scale = 2f, rotationDegrees = 10f)
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun `withStickerRemoved on an unknown id returns the state unchanged`() {
+        val state = CanvasState().withStickerAdded(id = "a", assetName = "star.svg", x = 0f, y = 0f)
+
+        val result = state.withStickerRemoved("does-not-exist")
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun `withStickerTransformed does not affect other stickers`() {
+        val state = CanvasState()
+            .withStickerAdded(id = "a", assetName = "star.svg", x = 0f, y = 0f)
+            .withStickerAdded(id = "b", assetName = "heart.svg", x = 5f, y = 5f)
+
+        val result = state.withStickerTransformed(id = "a", x = 42f, y = 84f, scale = 1.5f, rotationDegrees = 30f)
+
+        val untouched = result.stickers.first { it.id == "b" }
+        assertEquals(5f, untouched.x)
+        assertEquals(5f, untouched.y)
+        assertEquals(1f, untouched.scale)
+        assertEquals(0f, untouched.rotationDegrees)
+    }
 }
