@@ -77,6 +77,7 @@ fun CanvasScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
+                .zIndex(1000f)
         ) {
             Icon(Icons.Filled.Add, contentDescription = "Sticker ekle")
         }
@@ -92,6 +93,7 @@ fun CanvasScreen(modifier: Modifier = Modifier) {
                 .align(Alignment.BottomCenter)
                 .padding(24.dp)
                 .size(56.dp)
+                .zIndex(1000f)
                 .onGloballyPositioned { coordinates ->
                     trashBounds = coordinates.boundsInWindow()
                 }
