@@ -3,8 +3,10 @@ package com.atakan.travelplanner.ui.canvas
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +30,7 @@ class CanvasViewModel(
     val assetNames: StateFlow<List<String>> = _assetNames.asStateFlow()
 
     private var persistJob: Job? = null
+    private val externalScope = CoroutineScope(SupervisorJob() + ioDispatcher)
 
     init {
         viewModelScope.launch(ioDispatcher) {
@@ -67,6 +70,14 @@ class CanvasViewModel(
         persistJob?.cancel()
         persistJob = viewModelScope.launch(ioDispatcher) {
             delay(PERSIST_DEBOUNCE_MS)
+            repository.save(_canvasState.value)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        persistJob?.cancel()
+        externalScope.launch {
             repository.save(_canvasState.value)
         }
     }

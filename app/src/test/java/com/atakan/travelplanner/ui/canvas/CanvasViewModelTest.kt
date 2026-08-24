@@ -1,5 +1,6 @@
 package com.atakan.travelplanner.ui.canvas
 
+import androidx.lifecycle.ViewModelStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -7,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -104,5 +106,23 @@ class CanvasViewModelTest {
         vm.onStickerRemoved("id-1")
 
         assertEquals(0, vm.canvasState.value.stickers.size)
+    }
+
+    @Test
+    fun `clearing the ViewModel flushes a pending debounced save immediately`() = runTest(dispatcher) {
+        val store = FakeStore()
+        val vm = viewModel(store)
+        val viewModelStore = ViewModelStore()
+        viewModelStore.put("canvas", vm)
+        advanceTimeBy(1)
+
+        vm.onStickerAdded(assetName = "star.svg", x = 0f, y = 0f)
+        assertEquals(0, store.saved.size)
+
+        viewModelStore.clear()
+        runCurrent()
+
+        assertEquals(1, store.saved.size)
+        assertEquals(vm.canvasState.value, store.saved.last())
     }
 }
